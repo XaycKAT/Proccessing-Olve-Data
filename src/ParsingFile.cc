@@ -41,6 +41,8 @@ void ParsingFile::readPosFile(string fileName, vector<ThreeVector> &posCells, ve
         exit(EXIT_FAILURE);
     }
     string currLine;
+    stringstream currLineStream;
+    int temp;
     while (getline(fileData, currLine))
     {
         if(currLine[0]=='#')
@@ -54,11 +56,10 @@ void ParsingFile::readPosFile(string fileName, vector<ThreeVector> &posCells, ve
         streamPars(currLine,posPlates);
     }
     if (fileData.bad()) {
-        throw std::runtime_error ("IO error");
-        // IO error
+        throw runtime_error ("IO error");
     }
 }
-void ParsingFile::readSpecFile(string fileName, vector<vector<double>> &specVec)
+void ParsingFile::readSpecFile(string fileName, mapTypeSpec &edepArr, mapTypeLayer &layerArr)
 {
     ifstream fileData(fileName);
     if (!fileData.is_open())
@@ -69,9 +70,20 @@ void ParsingFile::readSpecFile(string fileName, vector<vector<double>> &specVec)
     string currLine;
     while(getline(fileData,currLine))
     {
+        double temp;
+        stringstream currLineStream;
         if(currLine[0]=='#')
         {
-
+           currLineStream<<currLine;
+           currLineStream>>temp;
+        }
+        else
+        {
+            int temp1;
+            double temp2;
+            currLineStream >> temp1;
+            currLineStream >> temp2;
+            edepArr[temp].push_back(EdepData(temp1,temp2));
         }
     }
 

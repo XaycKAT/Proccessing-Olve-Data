@@ -10,10 +10,10 @@ using namespace std;
 int main()
 {
     string fileName="/home/xayc/CERN/root/position.dat";
-    vector<ThreeVector> first;
-    vector<ThreeVector> second;
-    ParsingFile::readPosFile(fileName,first,second);
+    vector<ThreeVector> posCells;
+    vector<ThreeVector> posPlates;
+    ParsingFile::readPosFile(fileName,posCells,posPlates);
     ProcessFile obj;
-    obj.processData(first);
+    obj.sortLayers(posCells);
     return 0;
 }

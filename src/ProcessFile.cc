@@ -4,10 +4,10 @@
 #include<ProcessFile.hh>
 #include<iostream>
 #include<algorithm>
-
+#include<ParsingFile.hh>
 using namespace std;
 
-void ProcessFile::processData(vector<ThreeVector> &vecCells)
+void ProcessFile::sortLayers(vector<ThreeVector> &vecCells)
 {
     sort( vecCells.begin( ), vecCells.end( ), [ ]( const auto& lhs, const auto& rhs )
     {
@@ -15,13 +15,14 @@ void ProcessFile::processData(vector<ThreeVector> &vecCells)
     });
     double temp=vecCells[0].getY();
     int k=0;
-    vector<double> vec;
-    for(int i=0; i<vecCells.size();i++)
+    for(unsigned int i=0; i<vecCells.size();i++)
     {
         if(vecCells[i].getY()!=temp)
             k++;
-        layersArr[k].push_back(vecCells[i].getN());
+        //layersArr[k].push_back(vecCells[i].getN());
+        layersArr.insert(pair<int,int>(vecCells[i].getN(),k));
         temp=vecCells[i].getY();
     }
 }
+
 

@@ -2,6 +2,7 @@
 #include<ThreeVector.hh>
 #include<vector>
 #include<string>
+#include<ProcessFile.hh>
 using namespace std;
 
 class ParsingFile
@@ -12,5 +13,6 @@ private:
 public:
     ParsingFile();
     static void readPosFile (string fileName, vector<ThreeVector> &vecCell, vector<ThreeVector> &vecPlates);
-    static void readSpecFile (string fileName, vector<vector<double>> &arr);
+    static void readSpecFile (string fileName, mapTypeSpec &, mapTypeLayer &);
+
 };

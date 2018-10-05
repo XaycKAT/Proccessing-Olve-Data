@@ -10,8 +10,9 @@ using namespace std;
 class ThreeVector
 {
 private:
-    double x,y,z;
     int n;
+    double x,y,z;
+
 public:
     ThreeVector()
         :n(0.0), x(0.0), y(0.0), z(0.0)
