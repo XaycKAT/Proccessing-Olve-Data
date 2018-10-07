@@ -5,30 +5,36 @@
 #include<map>
 #include<unordered_map>
 
+typedef  unordered_map <int,int> mapTypeLayer;
+typedef  unordered_map<int,double> mapTypeIntDouble;
 
 struct EdepData
 {
-    int layerNum;
-    double edepLayer;
-    EdepData(int num, double en)
+    mapTypeIntDouble cellLayers;
+    mapTypeIntDouble platesGroup;
+    ThreeVector posVec;
+    ThreeVector momentumVec;
+    EdepData(){};
+    EdepData(ThreeVector pv, ThreeVector mv, mapTypeIntDouble cellvec, mapTypeIntDouble platevec)
     {
-        layerNum=num;
-        edepLayer=en;
+        posVec=pv;
+        momentumVec=mv;
+        cellLayers=cellvec;
+        platesGroup=platevec;
     };
 };
 
-typedef  unordered_map <int,int> mapTypeLayer;
-typedef  unordered_map <int,vector<EdepData>> mapTypeSpec;
+
+typedef  map <int,EdepData> mapTypeSpec;
 
 class ProcessFile
 {
 private:
-    mapTypeLayer layersArr;
+    mapTypeLayer cellLayersArr;
     mapTypeSpec specArr;
 public:
     ProcessFile(){};
     void sortLayers(vector<ThreeVector> &);
-    void sortEdep();
-    void rootProcess();
+    void rootProcess(string fileName, mapTypeLayer &platesGroupArr);
 
 };

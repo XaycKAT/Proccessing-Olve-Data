@@ -12,7 +12,8 @@ private:
     static void streamPars (string &str, vector<ThreeVector> &vec);
 public:
     ParsingFile();
-    static void readPosFile (string fileName, vector<ThreeVector> &vecCell, vector<ThreeVector> &vecPlates);
-    static void readSpecFile (string fileName, mapTypeSpec &, mapTypeLayer &);
+    static void readPosFile (string fileName, vector<ThreeVector> &cell, mapTypeLayer &plates);
+    static void readSpecFile (string fileName, mapTypeLayer &cell, mapTypeLayer &plates,
+                              mapTypeSpec &);
 
 };

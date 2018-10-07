@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ostream>
 #include <vector>
 
 using namespace std;
@@ -31,6 +32,19 @@ public:
     inline void setY(double ay) { y =  ay; }
     inline void setZ(double az) { z =  az; }
     inline void setN(int an) { n =  an; }
-
+    inline ThreeVector& operator=(const ThreeVector &) noexcept;
 
 };
+inline ostream & operator<< (ostream &os, const ThreeVector &v)
+{
+     os << "(" << v.getX() << "," << v.getY() << "," << v.getZ() << ")";
+     return os;
+}
+
+inline ThreeVector&  ThreeVector::operator= (const ThreeVector &v) noexcept
+{
+    x=v.x;
+    y=v.y;
+    z=v.z;
+    return *this;
+}

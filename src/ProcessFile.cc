@@ -19,10 +19,23 @@ void ProcessFile::sortLayers(vector<ThreeVector> &vecCells)
     {
         if(vecCells[i].getY()!=temp)
             k++;
-        //layersArr[k].push_back(vecCells[i].getN());
-        layersArr.insert(pair<int,int>(vecCells[i].getN(),k));
+        cellLayersArr.insert(pair<int,int>(vecCells[i].getN(),k));
         temp=vecCells[i].getY();
     }
 }
 
 
+void ProcessFile::rootProcess(string fileName,mapTypeLayer &platesGroupArr)
+{
+    ParsingFile::readSpecFile(fileName,cellLayersArr,platesGroupArr,specArr);
+    ofstream file("spec.dat");
+    for(auto &layer : specArr)
+    {
+    file << layer.first <<endl;
+    for(auto &cellLayers : layer.second.cellLayers)
+    {
+    file<< cellLayers.first <<"\t"<< cellLayers.second <<endl;
+    }
+    file<<endl;
+    }
+}
