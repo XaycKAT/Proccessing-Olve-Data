@@ -6,7 +6,7 @@
 #include<unordered_map>
 
 typedef  unordered_map <int,int> mapTypeLayer;
-typedef  unordered_map<int,double> mapTypeIntDouble;
+typedef  map<int,double> mapTypeIntDouble;
 
 struct EdepData
 {

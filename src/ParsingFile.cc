@@ -92,7 +92,6 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr, ma
     ThreeVector posVec;
     ThreeVector momentVec;
     int event;
-    int count=0;
     mapTypeIntDouble buffCellMap;
     mapTypeIntDouble buffPlateMap;
     while(getline(fileData,currLine))
@@ -107,45 +106,45 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr, ma
             double tempd;
 
 
-            if(count==0)
+            if(buffCellMap.size()!=0 || buffPlateMap.size()!=0)
             {
-                for(auto it=buffCellMap.begin();it != buffCellMap.end(); ++it)
+                currLineStream>>tempc;
+                currLineStream>>event;
+
+                currLineStream>>tempc;
+                currLineStream>>tempd;
+                momentVec.setX(tempd);
+                currLineStream>>tempc;
+                currLineStream>>tempd;
+                momentVec.setY(tempd);
+                currLineStream>>tempc;
+                currLineStream>>tempd;
+                momentVec.setZ(tempd);
+
+                currLineStream>>tempc;
+
+                currLineStream>>tempc;
+                currLineStream>>tempd;
+                posVec.setX(tempd);
+                currLineStream>>tempc;
+                currLineStream>>tempd;
+                posVec.setY(tempd);
+                currLineStream>>tempc;
+                currLineStream>>tempd;
+                posVec.setZ(tempd);
+
                 specArr[event].cellLayers=buffCellMap;
                 specArr[event].platesGroup=buffPlateMap;
                 specArr[event].momentumVec=momentVec;
                 specArr[event].posVec=posVec;
             }
-            currLineStream>>tempc;
-            currLineStream>>event;
 
-            currLineStream>>tempc;
-            currLineStream>>tempd;
-            momentVec.setX(tempd);
-            currLineStream>>tempc;
-            currLineStream>>tempd;
-            momentVec.setY(tempd);
-            currLineStream>>tempc;
-            currLineStream>>tempd;
-            momentVec.setZ(tempd);
 
-            currLineStream>>tempc;
-
-            currLineStream>>tempc;
-            currLineStream>>tempd;
-            posVec.setX(tempd);
-            currLineStream>>tempc;
-            currLineStream>>tempd;
-            posVec.setY(tempd);
-            currLineStream>>tempc;
-            currLineStream>>tempd;
-            posVec.setZ(tempd);
-            count++;
             buffCellMap.clear();
             buffPlateMap.clear();
         }
         else
         {
-            count=0;
             stringstream currLineStream;
             currLineStream<<currLine;
 

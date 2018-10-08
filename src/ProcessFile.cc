@@ -31,10 +31,14 @@ void ProcessFile::rootProcess(string fileName,mapTypeLayer &platesGroupArr)
     ofstream file("spec.dat");
     for(auto &layer : specArr)
     {
-    file << layer.first <<endl;
+    file <<'#'<< layer.first <<'\t'<<layer.second.momentumVec<<'\t'<<layer.second.posVec<< endl;
     for(auto &cellLayers : layer.second.cellLayers)
     {
     file<< cellLayers.first <<"\t"<< cellLayers.second <<endl;
+    }
+    for(auto &plateGroups : layer.second.platesGroup)
+    {
+    file<< plateGroups.first <<"\t"<< plateGroups.second <<endl;
     }
     file<<endl;
     }
