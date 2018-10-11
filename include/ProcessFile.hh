@@ -10,17 +10,17 @@ typedef  map<int,double> mapTypeIntDouble;
 
 struct EdepData
 {
-    mapTypeIntDouble cellLayers;
-    mapTypeIntDouble platesGroup;
+    mapTypeIntDouble cellLayersEdep;
+    mapTypeIntDouble platesEdep;
     ThreeVector posVec;
     ThreeVector momentumVec;
     EdepData(){};
-    EdepData(ThreeVector pv, ThreeVector mv, mapTypeIntDouble cellvec, mapTypeIntDouble platevec)
+    EdepData(ThreeVector pv, ThreeVector mv, mapTypeIntDouble cellEdep, mapTypeIntDouble plateEdep)
     {
         posVec=pv;
         momentumVec=mv;
-        cellLayers=cellvec;
-        platesGroup=platevec;
+        cellLayersEdep=cellEdep;
+        platesEdep=plateEdep;
     };
 };
 
@@ -30,14 +30,16 @@ typedef  map <int,EdepData> mapTypeSpec;
 class ProcessFile
 {
 private:
-    mapTypeLayer cellLayersArr;
+    mapTypeLayer cellLayersEdep;
+    mapTypeLayer platesEdep;
+
     mapTypeSpec specArr;
     vector<ThreeVector> posCells;
-    mapTypeLayer posPlates;
+    vector<ThreeVector> posPlates;
 
 public:
     ProcessFile(){};
-    void sortLayersPos(string fileName);
+    void sortLayersPos();
 
     void rootProcess(string filePos, string fileSpec);
 

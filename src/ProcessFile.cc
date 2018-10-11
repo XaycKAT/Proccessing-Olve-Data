@@ -13,9 +13,8 @@
 #include "TCanvas.h"
 using namespace std;
 
-void ProcessFile::sortLayersPos(string fileName)
+void ProcessFile::sortLayersPos()
 {
-    ParsingFile::readPosFile(fileName,posCells,posPlates);
 
     sort( posCells.begin( ), posCells.end( ), [ ]( const auto& lhs, const auto& rhs )
     {
@@ -27,7 +26,7 @@ void ProcessFile::sortLayersPos(string fileName)
     {
         if(posCells[i].getY()!=temp)
             k++;
-        cellLayersArr.insert(pair<int,int>(posCells[i].getN(),k));
+        cellLayersEdep.insert(pair<int,int>(posCells[i].getN(),k));
         temp=posCells[i].getY();
     }
 }
@@ -35,18 +34,20 @@ void ProcessFile::sortLayersPos(string fileName)
 
 void ProcessFile::rootProcess(string filePos, string fileSpec)
 {
-    ProcessFile::sortLayersPos(filePos);
-    ParsingFile::readSpecFile(fileSpec,cellLayersArr,posPlates,specArr);
+    ParsingFile::readPosFile(filePos,posCells,posPlates);
+    ProcessFile::sortLayersPos();
+    ParsingFile::readSpecFile(fileSpec,cellLayersEdep,platesEdep,specArr );
 
     ofstream file("spec.dat");
     for(auto &layer : specArr)
     {
         file <<'#'<< layer.first <<'\t'<<layer.second.momentumVec<<'\t'<<layer.second.posVec<< endl;
-        for(auto &cellLayers : layer.second.cellLayers)
+        for(auto &cellLayers : layer.second.cellLayersEdep)
         {
             file<< cellLayers.first <<"\t"<< cellLayers.second <<endl;
         }
-        for(auto &plateGroups : layer.second.platesGroup)
+        file<<"---->Plates"<<endl;
+        for(auto &plateGroups : layer.second.platesEdep)
         {
             file<< plateGroups.first <<"\t"<< plateGroups.second <<endl;
         }
@@ -58,7 +59,7 @@ void ProcessFile::rootProcess(string filePos, string fileSpec)
     for(auto &event : specArr)
     {
         double fullEdep;
-        for (auto &layer : event.second.cellLayers)
+        for (auto &layer : event.second.cellLayersEdep)
         {
             fullEdep+=layer.second;
         }
@@ -69,5 +70,5 @@ void ProcessFile::rootProcess(string filePos, string fileSpec)
 
     Hist->Draw();
     c.SetGridx();
-    c.Print ( "/home/xayc/CERN/spec.pdf" );
+    c.Print ( "/home/xayc/CERN/spec.jpg" );
 }
