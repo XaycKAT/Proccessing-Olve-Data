@@ -9,14 +9,11 @@
 using namespace std;
 int main()
 {
-    string fileName="/home/xayc/CERN/position.dat";
-    vector<ThreeVector> posCells;
-    mapTypeLayer posPlates;
-    ParsingFile::readPosFile(fileName,posCells,posPlates);
-    fileName="/home/xayc/CERN/spectrum.dat";
+    string filePos="/home/xayc/CERN/data/position.dat";
+    string fileSpec="/home/xayc/CERN/data/spectrum.dat";
     ProcessFile obj;
-    obj.sortLayers(posCells);
-    obj.rootProcess(fileName,posPlates);
+
+    obj.rootProcess(filePos,fileSpec);
     cout<<"success"<<endl;
     return 0;
 }

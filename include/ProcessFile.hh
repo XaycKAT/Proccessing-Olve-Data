@@ -32,9 +32,13 @@ class ProcessFile
 private:
     mapTypeLayer cellLayersArr;
     mapTypeSpec specArr;
+    vector<ThreeVector> posCells;
+    mapTypeLayer posPlates;
+
 public:
     ProcessFile(){};
-    void sortLayers(vector<ThreeVector> &);
-    void rootProcess(string fileName, mapTypeLayer &platesGroupArr);
+    void sortLayersPos(string fileName);
+
+    void rootProcess(string filePos, string fileSpec);
 
 };

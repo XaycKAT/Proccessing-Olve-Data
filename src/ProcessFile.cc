@@ -13,27 +13,30 @@
 #include "TCanvas.h"
 using namespace std;
 
-void ProcessFile::sortLayers(vector<ThreeVector> &vecCells)
+void ProcessFile::sortLayersPos(string fileName)
 {
-    sort( vecCells.begin( ), vecCells.end( ), [ ]( const auto& lhs, const auto& rhs )
+    ParsingFile::readPosFile(fileName,posCells,posPlates);
+
+    sort( posCells.begin( ), posCells.end( ), [ ]( const auto& lhs, const auto& rhs )
     {
         return lhs.getY() < rhs.getY();
     });
-    double temp=vecCells[0].getY();
+    double temp=posCells[0].getY();
     int k=0;
-    for(unsigned int i=0; i<vecCells.size();i++)
+    for(unsigned int i=0; i<posCells.size();i++)
     {
-        if(vecCells[i].getY()!=temp)
+        if(posCells[i].getY()!=temp)
             k++;
-        cellLayersArr.insert(pair<int,int>(vecCells[i].getN(),k));
-        temp=vecCells[i].getY();
+        cellLayersArr.insert(pair<int,int>(posCells[i].getN(),k));
+        temp=posCells[i].getY();
     }
 }
 
 
-void ProcessFile::rootProcess(string fileName,mapTypeLayer &platesGroupArr)
+void ProcessFile::rootProcess(string filePos, string fileSpec)
 {
-    ParsingFile::readSpecFile(fileName,cellLayersArr,platesGroupArr,specArr);
+    ProcessFile::sortLayersPos(filePos);
+    ParsingFile::readSpecFile(fileSpec,cellLayersArr,posPlates,specArr);
 
     ofstream file("spec.dat");
     for(auto &layer : specArr)
