@@ -13,7 +13,7 @@ int main()
     string fileSpec="/home/xayc/CERN/data/spectrum.dat";
     ProcessFile obj;
 
-    obj.rootProcess(filePos,fileSpec);
+    obj.mainProccess(filePos,fileSpec);
     cout<<"success"<<endl;
     return 0;
 }

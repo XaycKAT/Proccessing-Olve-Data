@@ -4,23 +4,26 @@
 #include<string>
 #include<map>
 #include<unordered_map>
+#include<tuple>
 
 typedef  unordered_map <int,int> mapTypeLayer;
 typedef  map<int,double> mapTypeIntDouble;
-
+typedef  map<int,pair<double,ThreeVector>> mapIntPairDoubleVec;
 struct EdepData
 {
     mapTypeIntDouble cellLayersEdep;
-    mapTypeIntDouble platesEdep;
+    mapIntPairDoubleVec platesEdep;
     ThreeVector posVec;
     ThreeVector momentumVec;
+    ThreeVector posEndVec;
     EdepData(){};
-    EdepData(ThreeVector pv, ThreeVector mv, mapTypeIntDouble cellEdep, mapTypeIntDouble plateEdep)
+    EdepData(ThreeVector pv, ThreeVector mv,ThreeVector pev, mapTypeIntDouble cellEdep, mapIntPairDoubleVec plateEdep)
     {
         posVec=pv;
         momentumVec=mv;
         cellLayersEdep=cellEdep;
         platesEdep=plateEdep;
+        posEndVec=pev;
     };
 };
 
@@ -30,17 +33,18 @@ typedef  map <int,EdepData> mapTypeSpec;
 class ProcessFile
 {
 private:
-    mapTypeLayer cellLayersEdep;
-    mapTypeLayer platesEdep;
-
+    mapTypeLayer cellLayersNum;
     mapTypeSpec specArr;
-    vector<ThreeVector> posCells;
-    vector<ThreeVector> posPlates;
+    double thresholdValuePlas;
+    double thresholdValueSilic;
+    vector<pair<int,ThreeVector>> posCells;
+    vector<pair<int,ThreeVector>> posPlates;
+
 
 public:
     ProcessFile(){};
     void sortLayersPos();
-
-    void rootProcess(string filePos, string fileSpec);
+    void FindCentralPad(mapTypeSpec &spec,  int event,vector<pair<int,ThreeVector>> &vecplate);
+    void mainProccess(string filePos, string fileSpec);
 
 };

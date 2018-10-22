@@ -8,9 +8,10 @@
 #include<sstream>
 #include<map>
 #include<unordered_map>
+#include<tuple>
 
 using namespace std;
-void ParsingFile::streamPars(string &currLine, vector<ThreeVector> &vec)
+void ParsingFile::streamPars(string &currLine,  vector<pair<int,ThreeVector>> &vec)
 {
     ThreeVector tempvec;
     double tempd;
@@ -19,22 +20,37 @@ void ParsingFile::streamPars(string &currLine, vector<ThreeVector> &vec)
 
     currLineStream<<currLine;
     currLineStream>>tempd;
-    tempvec.setN(tempd);
+    int n=tempd;
+    currLineStream>>tempc;
+    currLineStream>>tempd;
+    tempvec.x=tempd ;
 
     currLineStream>>tempc;
     currLineStream>>tempd;
-    tempvec.setX(tempd);
+    tempvec.y=tempd ;
 
     currLineStream>>tempc;
     currLineStream>>tempd;
-    tempvec.setY(tempd);
-
-    currLineStream>>tempc;
-    currLineStream>>tempd;
-    tempvec.setZ(tempd);
-    vec.push_back(tempvec);
+    tempvec.z=tempd ;
+    vec.push_back(pair<int,ThreeVector>(n,tempvec));
 }
-void ParsingFile::readPosFile(string fileName, vector<ThreeVector> &posCells, vector<ThreeVector>  &posPlates)
+void ParsingFile::streamVec(stringstream &currLineStream, ThreeVector &vec)
+{
+    double tempd;
+    char tempc;
+
+    currLineStream>>tempc;
+    currLineStream>>tempd;
+    vec.x=tempd;
+    currLineStream>>tempc;
+    currLineStream>>tempd;
+    vec.y=tempd;
+    currLineStream>>tempc;
+    currLineStream>>tempd;
+    vec.z=tempd;
+}
+
+void ParsingFile::readPosFile(string fileName,  vector<pair<int,ThreeVector>> &posCells,  vector<pair<int,ThreeVector>>  &posPlates)
 {
     ifstream fileData(fileName);
     if (!fileData.is_open())
@@ -43,11 +59,9 @@ void ParsingFile::readPosFile(string fileName, vector<ThreeVector> &posCells, ve
         exit(EXIT_FAILURE);
     }
     string currLine;
-    int temp;
+
     while (getline(fileData, currLine))
     {
-        stringstream currLineStream;
-
         if(currLine[0]=='#')
         {
             break;
@@ -56,16 +70,15 @@ void ParsingFile::readPosFile(string fileName, vector<ThreeVector> &posCells, ve
     }
     while (getline(fileData, currLine))
     {
-        stringstream currLineStream;
-        currLineStream<<currLine;
-        streamPars(currLine,posCells);
+
+        streamPars(currLine,posPlates);
 
     }
     if (fileData.bad()) {
         throw runtime_error ("IO error");
     }
 }
-void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr, mapTypeLayer &platesGroupArr,mapTypeSpec &specArr)
+void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,mapTypeSpec &specArr)
 {
     ifstream fileData(fileName);
     if (!fileData.is_open())
@@ -76,57 +89,38 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr, ma
     string currLine;
     ThreeVector posVec;
     ThreeVector momentVec;
+    ThreeVector posEndVec;
     int event;
     mapTypeIntDouble buffCellMap;
-    mapTypeIntDouble buffPlateMap;
+    mapIntPairDoubleVec buffPlateMap;
     while(getline(fileData,currLine))
     {
-
-
-        stringstream currLineStream;
-        currLineStream<<currLine;
         if(currLine[0]=='#')
         {
             char tempc;
-            double tempd;
-
-
+            stringstream currLineStream;
+            currLineStream<<currLine;
             if(buffCellMap.size()!=0 || buffPlateMap.size()!=0)
             {
-                currLineStream>>tempc;
-                currLineStream>>event;
-
-                currLineStream>>tempc;
-                currLineStream>>tempd;
-                momentVec.setX(tempd);
-                currLineStream>>tempc;
-                currLineStream>>tempd;
-                momentVec.setY(tempd);
-                currLineStream>>tempc;
-                currLineStream>>tempd;
-                momentVec.setZ(tempd);
-
-                currLineStream>>tempc;
-
-                currLineStream>>tempc;
-                currLineStream>>tempd;
-                posVec.setX(tempd);
-                currLineStream>>tempc;
-                currLineStream>>tempd;
-                posVec.setY(tempd);
-                currLineStream>>tempc;
-                currLineStream>>tempd;
-                posVec.setZ(tempd);
-
                 specArr[event].cellLayersEdep=buffCellMap;
                 specArr[event].platesEdep=buffPlateMap;
                 specArr[event].momentumVec=momentVec;
                 specArr[event].posVec=posVec;
+                specArr[event].posEndVec=posEndVec;
+                buffCellMap.clear();
+                buffPlateMap.clear();
             }
+            currLineStream>>tempc;
+            currLineStream>>event;
+            streamVec(currLineStream,momentVec);
+
+            currLineStream>>tempc;
+            streamVec(currLineStream,posVec);
+
+            currLineStream>>tempc;
+            streamVec(currLineStream,posEndVec);
 
 
-            buffCellMap.clear();
-            buffPlateMap.clear();
         }
         else
         {
@@ -135,8 +129,11 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr, ma
 
             int copyNo;
             double edep;
+            ThreeVector posSilicVec;
+            pair<double,ThreeVector> p;
             currLineStream >> copyNo;
             currLineStream >> edep;
+            streamVec(currLineStream,posSilicVec);
             auto it = cellLayersArr.find(copyNo);
             if (it != cellLayersArr.end())
             {
@@ -150,10 +147,21 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr, ma
             }
             else
             {
-
-                buffPlateMap.insert(pair<int,double>(copyNo,edep));
+                p.first=edep;
+                p.second=posSilicVec;
+                buffPlateMap.insert(pair<int,pair<double,ThreeVector>>(copyNo,p));
 
             }
         }
+    }
+    if(buffCellMap.size()!=0 || buffPlateMap.size()!=0)
+    {
+        specArr[event].cellLayersEdep=buffCellMap;
+        specArr[event].platesEdep=buffPlateMap;
+        specArr[event].momentumVec=momentVec;
+        specArr[event].posVec=posVec;
+        specArr[event].posEndVec=posEndVec;
+        buffCellMap.clear();
+        buffPlateMap.clear();
     }
 }
