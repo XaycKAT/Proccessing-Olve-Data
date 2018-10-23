@@ -25,3 +25,13 @@ bool ThreeVector::getPlateIntersection(const ThreeVector &pp1, const ThreeVector
         return false;
 }
 
+bool ThreeVector::getLineBelongs(const ThreeVector &linePoint1,const ThreeVector &linePoint2,const ThreeVector &point)
+{
+    double x= abs((point.x - linePoint1.x)/(linePoint2.x-linePoint1.x));
+    double y= abs((point.y - linePoint1.y)/(linePoint2.y-linePoint1.y));
+    double z= abs((point.z - linePoint1.z)/(linePoint2.z-linePoint1.z));
+    if(abs(x+y-2*z) < 0.001)
+        return true;
+    else
+        return false;
+}

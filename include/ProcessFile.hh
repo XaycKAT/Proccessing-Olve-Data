@@ -43,8 +43,12 @@ private:
 
 public:
     ProcessFile(){};
-    void sortLayersPos();
-    void FindCentralPad(mapTypeSpec &spec,  int event,vector<pair<int,ThreeVector>> &vecplate);
-    void mainProccess(string filePos, string fileSpec);
+    ~ProcessFile(){};
+    void SortLayersPos();
+    void FindCentralPad(int event,vector<pair<int,ThreeVector>> &vecplate);
+    void MainProccess(string filePos, string fileSpec);
+    void FilterSpec();
+    void WriteFile(string);
+    void RootProccess();
 
 };
