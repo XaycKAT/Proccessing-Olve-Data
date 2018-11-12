@@ -41,7 +41,7 @@ public:
 };
 inline double ThreeVector::range(const ThreeVector &p1, const ThreeVector &p2)
 {
-    return sqrt(pow (p2.x-p1.x,2)+ pow(p2.y-p1.y,2) +pow(p2.z - p1.z, 2));
+    return sqrt(pow(p2.x-p1.x,2)+ pow(p2.y-p1.y,2) +pow(p2.z - p1.z,2));
 }
 
 inline ostream & operator<< (ostream &os, const ThreeVector &v)
@@ -62,7 +62,20 @@ inline ThreeVector operator + (const ThreeVector &p1, const ThreeVector &p2)
 {
     return ThreeVector(p1.x + p2.x, p1.y + p2.y, p1.z + p2.z);
 }
-
+inline bool operator == (const ThreeVector &p1, const ThreeVector &p2)
+{
+    if(p1.x == p2.x && p1.y == p2.y && p1.z == p2.z )
+        return true;
+    else
+        return false;
+}
+inline bool operator != (const ThreeVector &p1, const ThreeVector &p2)
+{
+    if(p1.x != p2.x || p1.y != p2.y || p1.z != p2.z )
+        return true;
+    else
+        return false;
+}
 inline ThreeVector operator - (const ThreeVector &p1, const ThreeVector &p2)
 {
     return ThreeVector(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);

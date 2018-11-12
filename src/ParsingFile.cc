@@ -11,7 +11,8 @@
 #include<tuple>
 
 using namespace std;
-void ParsingFile::streamPars(string &currLine,  vector<pair<int,ThreeVector>> &vec)
+
+void ParsingFile::StreamPars(string &currLine,  vector<pair<int,ThreeVector>> &vec)
 {
     ThreeVector tempvec;
     double tempd;
@@ -34,7 +35,7 @@ void ParsingFile::streamPars(string &currLine,  vector<pair<int,ThreeVector>> &v
     tempvec.z=tempd ;
     vec.push_back(pair<int,ThreeVector>(n,tempvec));
 }
-void ParsingFile::streamVec(stringstream &currLineStream, ThreeVector &vec)
+void ParsingFile::StreamVec(stringstream &currLineStream, ThreeVector &vec)
 {
     double tempd;
     char tempc;
@@ -49,36 +50,123 @@ void ParsingFile::streamVec(stringstream &currLineStream, ThreeVector &vec)
     currLineStream>>tempd;
     vec.z=tempd;
 }
-
-void ParsingFile::readPosFile(string fileName,  vector<pair<int,ThreeVector>> &posCells,  vector<pair<int,ThreeVector>>  &posPlates)
+void ParsingFile::ReadBinVec(ifstream &file, ThreeVector &vec)
 {
-    ifstream fileData(fileName);
-    if (!fileData.is_open())
+    float x,y,z;
+    file.read((char*)&x,sizeof (x));
+    file.read((char*)&y,sizeof (y));
+    file.read((char*)&z,sizeof (z));
+    vec={x,y,z};
+}
+void ParsingFile::ReadBinID(ifstream &file, int32_t &an, int32_t &ln, int32_t &num)
+{
+    file.read((char*)&an,sizeof (an));
+    file.read((char*)&ln,sizeof (ln));
+    file.read((char*)&num,sizeof (num));
+}
+void ParsingFile::ReadBinPosFile(string fileName, mapTypeID &mapIdPads, vector<pair<int,ThreeVector>> &posCells, mapIntVec &posPlates)
+{
+    ifstream filePos(fileName, ifstream::binary);
+    if (!filePos.is_open())
     {
         cout << "Position file can not be opened, or it does not exist " << endl;
         exit(EXIT_FAILURE);
     }
-    string currLine;
-
-    while (getline(fileData, currLine))
+    int32_t an = 0;
+    int32_t ln, num, copyN;
+    int id;
+    ThreeVector posVec;
+    while (true)
     {
-        if(currLine[0]=='#')
+
+        filePos.read((char*)&copyN, sizeof(copyN));
+        ReadBinID(filePos,an,ln,num);
+        ReadBinVec(filePos,posVec);
+        if(an > 1)
         {
+            id=an*10+ln;
+            posPlates.insert(pair<int,ThreeVector>(copyN,posVec));
+            ThreeVector* vec=&posPlates.at(copyN);
+            pair<int,ThreeVector*> tempp(copyN,vec);
+            mapIdPads.insert(pair<int,pair<int,ThreeVector*>>(id,tempp));
             break;
         }
-        streamPars(currLine,posCells);
+        posCells.push_back(pair<int,ThreeVector>(copyN,posVec));
     }
-    while (getline(fileData, currLine))
+    while(filePos.read((char*)&copyN,sizeof (copyN)))
     {
-
-        streamPars(currLine,posPlates);
-
+        ReadBinID(filePos,an,ln,num);
+        ReadBinVec(filePos,posVec);
+        id=an*10+ln;
+        posPlates.insert(pair<int,ThreeVector>(copyN,posVec));
+        ThreeVector* vec=&posPlates.at(copyN);
+        pair<int,ThreeVector*> tempp(copyN,vec);
+        mapIdPads.insert(pair<int,pair<int,ThreeVector*>>(id,tempp));
     }
-    if (fileData.bad()) {
+
+    if (filePos.bad()) {
         throw runtime_error ("IO error");
     }
+    filePos.close();
 }
-void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,mapTypeSpec &specArr)
+void ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, mapTypeSpec &specArr)
+{
+    ifstream fileSpec(fileName, ifstream::binary);
+    if (!fileSpec.is_open())
+    {
+        cout << "Spectrum file can not be opened, or it does not exist " << endl;
+        exit(EXIT_FAILURE);
+    }
+    //номер, момент, позиция, кол-во выделений
+    int32_t evtID, edepCount, copyN;
+    ThreeVector posVec, momVec, targetVec;
+    vector<pair<int,ThreeVector>> centPads;
+    float energyEdep;
+    mapTypeEdep buffCellMap;
+    mapTypeEdep buffPlateMap;
+    while(fileSpec.read((char*)&evtID, sizeof(evtID)))
+    {
+        ReadBinVec(fileSpec,momVec);
+        ReadBinVec(fileSpec,posVec);
+        fileSpec.read((char*)&edepCount, sizeof(edepCount));
+        while (edepCount!=0)
+        {
+            //номер, энергия, вектор.
+            edepCount--;
+            fileSpec.read((char*)&copyN, sizeof(copyN));
+            fileSpec.read((char*)&energyEdep, sizeof(energyEdep));
+            ReadBinVec(fileSpec,targetVec);
+            if(targetVec.x != 0. && targetVec.y != 0. && targetVec.z != 0.)
+            {
+                centPads.push_back(pair<int,ThreeVector>(copyN,targetVec));
+            }
+            auto it = cellLayersArr.find(copyN);
+            if (it != cellLayersArr.end())
+            {
+                auto it = buffCellMap.find(cellLayersArr.at(copyN));
+                if(it != buffCellMap.end())
+                {
+                    it->second+=energyEdep;
+                }
+                else
+                    buffCellMap.insert(pair<int,double>(cellLayersArr.at(copyN),energyEdep));
+            }
+            else
+            {
+                buffPlateMap.insert(pair<int,double>(copyN,energyEdep));
+            }
+        }
+        specArr[evtID].cellLayersEdep=buffCellMap;
+        specArr[evtID].platesEdep=buffPlateMap;
+        specArr[evtID].momentumVec=momVec;
+        specArr[evtID].posVec=posVec;
+        specArr[evtID].centralPads=centPads;
+        buffCellMap.clear();
+        buffPlateMap.clear();
+        centPads.clear();
+    }
+}
+void ParsingFile::ReadSpecFile(string fileName,  mapTypeLayer &cellLayersArr,mapTypeSpec &specArr)
 {
     ifstream fileData(fileName);
     if (!fileData.is_open())
@@ -91,8 +179,8 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,map
     ThreeVector momentVec;
     ThreeVector posEndVec;
     int event;
-    mapTypeIntDouble buffCellMap;
-    mapIntPairDoubleVec buffPlateMap;
+    mapTypeEdep buffCellMap;
+    mapTypeEdep buffPlateMap;
     while(getline(fileData,currLine))
     {
         if(currLine[0]=='#')
@@ -106,19 +194,18 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,map
                 specArr[event].platesEdep=buffPlateMap;
                 specArr[event].momentumVec=momentVec;
                 specArr[event].posVec=posVec;
-                specArr[event].posEndVec=posEndVec;
                 buffCellMap.clear();
                 buffPlateMap.clear();
             }
             currLineStream>>tempc;
             currLineStream>>event;
-            streamVec(currLineStream,momentVec);
+            StreamVec(currLineStream,momentVec);
 
             currLineStream>>tempc;
-            streamVec(currLineStream,posVec);
+            StreamVec(currLineStream,posVec);
 
             currLineStream>>tempc;
-            streamVec(currLineStream,posEndVec);
+            StreamVec(currLineStream,posEndVec);
 
 
         }
@@ -133,7 +220,7 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,map
             pair<double,ThreeVector> p;
             currLineStream >> copyNo;
             currLineStream >> edep;
-            streamVec(currLineStream,posSilicVec);
+            StreamVec(currLineStream,posSilicVec);
             auto it = cellLayersArr.find(copyNo);
             if (it != cellLayersArr.end())
             {
@@ -147,9 +234,8 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,map
             }
             else
             {
-                p.first=edep;
-                p.second=posSilicVec;
-                buffPlateMap.insert(pair<int,pair<double,ThreeVector>>(copyNo,p));
+
+                buffPlateMap.insert(pair<int,double>(copyNo,edep));
 
             }
         }
@@ -160,7 +246,6 @@ void ParsingFile::readSpecFile(string fileName,  mapTypeLayer &cellLayersArr,map
         specArr[event].platesEdep=buffPlateMap;
         specArr[event].momentumVec=momentVec;
         specArr[event].posVec=posVec;
-        specArr[event].posEndVec=posEndVec;
         buffCellMap.clear();
         buffPlateMap.clear();
     }
