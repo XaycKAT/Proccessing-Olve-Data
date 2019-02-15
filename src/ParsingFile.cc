@@ -109,7 +109,7 @@ void ParsingFile::ReadBinPosFile(string fileName, mapTypeID &mapIdPads, vector<p
     }
     filePos.close();
 }
-void ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, mapTypeSpec &specArr)
+int ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, mapTypeSpec &specArr, int firstEvt)
 {
     ifstream fileSpec(fileName, ifstream::binary);
     if (!fileSpec.is_open())
@@ -118,13 +118,14 @@ void ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, 
         exit(EXIT_FAILURE);
     }
     //номер, момент, позиция, кол-во выделений
-    int32_t evtID, edepCount, copyN;
+    int32_t evtID=firstEvt, edepCount, copyN;
+    int32_t buffEvt;
     ThreeVector posVec, momVec, targetVec;
     vector<pair<int,ThreeVector>> centPads;
     float energyEdep;
     mapTypeEdep buffCellMap;
     mapTypeEdep buffPlateMap;
-    while(fileSpec.read((char*)&evtID, sizeof(evtID)))
+    while(fileSpec.read((char*)&buffEvt, sizeof(buffEvt)))
     {
         ReadBinVec(fileSpec,momVec);
         ReadBinVec(fileSpec,posVec);
@@ -164,7 +165,9 @@ void ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, 
         buffCellMap.clear();
         buffPlateMap.clear();
         centPads.clear();
+        evtID++;
     }
+    return evtID;
 }
 void ParsingFile::ReadSpecFile(string fileName,  mapTypeLayer &cellLayersArr,mapTypeSpec &specArr)
 {
@@ -249,4 +252,30 @@ void ParsingFile::ReadSpecFile(string fileName,  mapTypeLayer &cellLayersArr,map
         buffCellMap.clear();
         buffPlateMap.clear();
     }
+}
+void ParsingFile::ReadNeighborPads(string filename, mapTypeNiegh &mapNeig)
+{
+    ifstream fileNeighbor(filename);
+    if (!fileNeighbor.is_open())
+    {
+        cout << "Neighbor file can not be opened, or it does not exist " << endl;
+        exit(EXIT_FAILURE);
+    }
+    string currLine;
+    while(getline(fileNeighbor,currLine))
+    {
+        stringstream currStream;
+        currStream<< currLine;
+        int pad;
+        int neig;
+        vector<int> neigPads;
+        currStream >> pad;
+        while ( currStream >> neig)
+        {
+            neigPads.push_back(neig);
+        }
+        mapNeig.insert(pair<int,vector<int>>(pad,neigPads));
+        neigPads.clear();
+    }
+
 }

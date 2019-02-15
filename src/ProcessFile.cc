@@ -33,6 +33,18 @@ void ProcessFile::SortLayersPos()
         temp=posCells[i].second.y;
     }
 }
+void ProcessFile::WriteNeigFile()
+{
+    ofstream file("mapNeig.dat");
+    for(auto it : mapNeighbors)
+    {
+        file << it.first<<"\t";
+        for(auto pair : it.second)
+            file << pair <<" ";
+        file<<endl;
+    }
+}
+
 void ProcessFile::FindNeighborPads()
 {
 #pragma omp parallel for
@@ -49,28 +61,13 @@ void ProcessFile::FindNeighborPads()
             {
                 double range = ThreeVector::range(pos->second,*neig->second.second);
                 if( abs(range - 10.) < delta || abs(sqrt(10.*10.+5.*5.)-range) < delta
-                           || abs(10.*sqrt(2) - range) < delta)                {
+                        || abs(10.*sqrt(2) - range) < delta)                {
                     tempv.push_back(neig->second.first);
                 }
             }
             mapNeighbors.insert(pair<int,vector<int>>(pos->first,tempv));
         }
     }
-
-    //    ofstream file("pos.dat");
-    //    file<<"#id"<<endl;
-    //    for(auto &it : mapIdPads)
-    //    {
-    //        file<<it.first<<'\t'<<it.second.first<<'\t'<<*it.second.second<<endl;
-    //    }
-    //    file<<"#plates"<<endl;
-    //    for(auto &it : posPlates)
-    //    {
-    //        file<<it.first<<'\t'<<it.second<<endl;
-    //    }
-    //    file.close();
-
-
 }
 void ProcessFile::FindReverseCurr()
 {
@@ -79,10 +76,18 @@ void ProcessFile::FindReverseCurr()
         double mainEdep = 0.;
         double neighEdep = 0.;
         vector<double> revCurr;
-        vector<double> charge;
+        vector<double> chargeNeig;
+        vector<double> chargeWNeig;
         for(auto &centPad : evt.second.centralPads)
         {
-            mainEdep += evt.second.platesEdep.at(centPad.first);
+            double angle;
+            if(mapNeighbors.at(centPad.first).size() > 4)
+            {
+                vector<int> vec = mapNeighbors.at(centPad.first);
+                angle = ThreeVector::getAngleTrackPad(posPlates.at(vec[0]),posPlates.at(vec[2]),posPlates.at(vec[4]),evt.second.momentumVec);
+            }
+            else
+                angle = 1;
             double edep = 0.;
             for(auto &neig : mapNeighbors.at(centPad.first))
             {
@@ -92,11 +97,14 @@ void ProcessFile::FindReverseCurr()
                 else
                     continue;
             }
-            neighEdep += edep / mapNeighbors.at(centPad.first).size();
+            mainEdep = evt.second.platesEdep.at(centPad.first) * abs(angle);
+            neighEdep = edep * abs(angle) / mapNeighbors.at(centPad.first).size();
             revCurr.push_back(mainEdep - neighEdep);
-            charge.push_back((mainEdep - neighEdep)/thresholdValueSilic);
+            chargeNeig.push_back(sqrt(abs(mainEdep - neighEdep)/thresholdValueSilic));
+            chargeWNeig.push_back(sqrt(abs(mainEdep)/thresholdValueSilic));
         }
-        evt.second.charge = charge;
+        evt.second.chargeN = chargeNeig;
+        evt.second.chargewN = chargeWNeig;
         evt.second.reversCurrent = revCurr;
     }
 
@@ -143,7 +151,7 @@ void ProcessFile::FilterSpec()
         specArr.erase(it);
     }
     cout<<"After: "<<specArr.size()<<endl;
-    int a[15]={0};
+    int a[10]={0};
     for (auto &evt : specArr)
     {
         vector<pair<int,double>> ers;
@@ -185,7 +193,7 @@ void ProcessFile::FilterSpec()
 
     }
     int f=0;
-    for(int i=0;i<15;i++)
+    for(int i=0;i < 10;i++)
     {
         cout<<i<<'\t'<<a[i]<<endl;
         f+=a[i];
@@ -202,43 +210,60 @@ void ProcessFile::WriteFile(string fileOutName)
         file <<'#'<< event.first <<endl;
         for(unsigned int i = 0; i < event.second.reversCurrent.size(); i++)
         {
-            file<< event.second.reversCurrent[i]<<"  "<<event.second.charge[i]<<endl;
+            file<<setprecision(3)<< event.second.reversCurrent[i]<<"  "<<event.second.chargeN[i]<<"  "<<event.second.chargewN[i]<<endl;
         }
         file << endl;
 
-        //        file<<"---->Cells"<<endl;
-        //        for(auto &layer : event.second.cellLayersEdep)
-        //        {
-        //            file<< layer.first <<"\t"<< layer.second <<endl;
-        //        }
-        //        file<<"---->Plates"<<endl;
-        //        for(auto &plate : event.second.platesEdep)
-        //        {
-        //            file<< plate.first<<"\t"<< plate.second<<endl;
-        //        }
-        //        file<<endl;
+//        file<<"---->Cells"<<endl;
+//        for(auto &layer : event.second.cellLayersEdep)
+//        {
+//            file<< layer.first <<"\t"<< layer.second <<endl;
+//        }
+//        file<<"---->Plates"<<endl;
+//        for(auto &plate : event.second.platesEdep)
+//        {
+//            file<< plate.first<<"\t"<< plate.second<<endl;
+//        }
+//        file<<endl;
     }
     file.close();
 
 }
 void ProcessFile::RootProccess()
 {
-    TH1* Hist =new TH1D("value", "Energy 1 TeV 1000 events", 100, 0, 6e6);
-    for(auto &event : specArr)
+    TH1* h1 =new TH1D("value", "Z value p, 30 TeV", 40, 0, 4);
+    for(auto &z : specArr)
     {
-        double fullEdep;
-        for (auto &layer : event.second.cellLayersEdep)
-        {
-            fullEdep+=layer.second;
-        }
-        //cout<<fullEdep<<endl;
-        Hist->Fill(fullEdep);
+        double k = z.second.chargeN[1];
+        h1->Fill(k);
+    }
+    TH1* h2 =new TH1D("value", "Z value without Neighbors, 100 GeV", 40, 0, 4);
+    for(auto &z : specArr)
+    {
+        double k = z.second.chargewN[1];
+        h2->Fill(k);
     }
     TCanvas c ( "test", "test" );
-
-    Hist->Draw();
+    h1->SetLineColor(kRed);
+    h1->Draw();
+    h2->Draw("SAME");
     c.SetGridx();
-    c.Print ( "/home/xayc/CERN/spec.jpg" );
+    c.Print ( "/home/xayc/CERN/specZ_30tev_p.pdf" );
+
+    TH1* h3 = new TH1D("value", "Energy distribution 30 TeV p 1k events", 100,0,3e4);
+    for(auto &z : specArr)
+    {
+        double en = 0;
+        for(auto &e : z.second.cellLayersEdep)
+        {
+            en+=e.second;
+        }
+        h3->Fill(en);
+    }
+    TCanvas c1 ("test", "test");
+    h3->Draw();
+    c1.SetGrid();
+    c1.Print("/home/xayc/CERN/specEN_30tev_p.pdf");
 }
 void ProcessFile::RootGraph2D(vector<ThreeVector> vec)
 {
@@ -255,36 +280,32 @@ void ProcessFile::RootGraph2D(vector<ThreeVector> vec)
     tapp.Run();
 
 }
-void ProcessFile::MainProccess(string filePos, string fileSpec)
+void ProcessFile::MainProccess(string filePos, string fileSpec, bool index)
 {
     ParsingFile::ReadBinPosFile(filePos,mapIdPads,posCells,posPlates);
     SortLayersPos();
-    ParsingFile::ReadBinSpecFile(fileSpec,cellLayersNum,specArr);
+    int amountFiles = 4;
+    int evtId = 0;
+    for(int i = 1; i < amountFiles; i+=2)
+    {
+        string name = fileSpec + to_string(i) + ".dat";
+        evtId = ParsingFile::ReadBinSpecFile(name,cellLayersNum,specArr, evtId);
+    }
     FilterSpec();
-    FindNeighborPads();
-    int count0=0;
-    int count5=0;
-    int count3=0;
-    int count8=0;
-    int count6=0;
-    int counts=0;
+    if(index)
+        FindNeighborPads();
+    else
+        ParsingFile::ReadNeighborPads("mapNeig.dat", mapNeighbors);
+
+    int count[8]={0};
 
     for(auto &p : mapNeighbors)
     {
-        if(p.second.size() < 4)
-            count0++;
-        if(p.second.size() == 6)
-            count6++;
-        if(p.second.size() == 8)
-            count8++;
-        if(p.second.size() == 3)
-            count3++;
-        if(p.second.size() == 5)
-            count5++;
-        if(p.second.size() > 8)
-            counts++;
+        count[p.second.size()]++;
     }
+    WriteNeigFile();
     FindReverseCurr();
-    WriteFile("spec.dat");
+    RootProccess();
+    WriteFile("/home/xayc/CERN/data/spec.dat");
 }
 

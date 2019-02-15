@@ -35,3 +35,11 @@ bool ThreeVector::getLineBelongs(const ThreeVector &linePoint1,const ThreeVector
     else
         return false;
 }
+
+double ThreeVector::getAngleTrackPad( ThreeVector &p1, ThreeVector &p2, ThreeVector &p3, ThreeVector &vec)
+{
+    ThreeVector e1 = p1-p2;
+    ThreeVector e2 = p2-p3;
+    ThreeVector n = e1 & e2;
+    return n*vec/(abs(n)*abs(vec));
+}

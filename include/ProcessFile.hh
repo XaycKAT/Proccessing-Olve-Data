@@ -17,14 +17,15 @@ struct EdepData
 {
     mapTypeEdep cellLayersEdep;
     mapTypeEdep platesEdep;
-    vector<double> charge;
+    vector<double> chargeN;
+    vector<double> chargewN;
     vector<double> reversCurrent;
     ThreeVector posVec;
     ThreeVector momentumVec;
     vector<pair<int,ThreeVector>> centralPads;
     EdepData(){}
     EdepData(ThreeVector pv, ThreeVector mv,vector<pair<int,ThreeVector>> centPads, mapTypeEdep cellEdep,
-             mapTypeEdep plateEdep, vector<double> revCurr, vector<double> Z)
+             mapTypeEdep plateEdep, vector<double> revCurr, vector<double> chN,vector<double> chwN)
     {
         reversCurrent=revCurr;
         posVec=pv;
@@ -32,7 +33,8 @@ struct EdepData
         cellLayersEdep=cellEdep;
         platesEdep=plateEdep;
         centralPads=centPads;
-        charge = Z;
+        chargeN = chN;
+        chargewN = chwN;
     }
 };
 struct PosData
@@ -60,7 +62,7 @@ private:
     mapTypeLayer cellLayersNum;
     mapTypeSpec specArr;
     double thresholdValuePlas=5*2*2.5*1.032;
-    double thresholdValueSilic=2*0.5*2.33;
+    double thresholdValueSilic=2*0.05*2.33;
     mapTypeID mapIdPads;
     mapTypeNiegh mapNeighbors;
     vector<pair<int,ThreeVector>> posCells;
@@ -72,12 +74,13 @@ public:
     ProcessFile(){}
     ~ProcessFile(){}
     void SortLayersPos();
-    void MainProccess(string filePos, string fileSpec);
+    void MainProccess(string filePos, string fileSpec, bool);
     void FilterSpec();
     void WriteFile(string);
     void RootProccess();
     void RootGraph2D(vector<ThreeVector> vec);
     void FindNeighborPads();
     void FindReverseCurr();
+    void WriteNeigFile();
 
 };

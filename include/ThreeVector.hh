@@ -37,6 +37,7 @@ public:
     bool getPlateIntersection(const ThreeVector &pp1, const ThreeVector &pp2, const ThreeVector &pp3,
                                  const ThreeVector &lp1, const ThreeVector &lp2);
     static bool getLineBelongs(const ThreeVector &linePoint1,const ThreeVector &linePoint2,const ThreeVector &point);
+    static double getAngleTrackPad(ThreeVector &p1,ThreeVector &p2, ThreeVector &p3,  ThreeVector &vec);
 
 };
 inline double ThreeVector::range(const ThreeVector &p1, const ThreeVector &p2)
