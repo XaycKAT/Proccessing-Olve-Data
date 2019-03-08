@@ -10,10 +10,13 @@ using namespace std;
 int main()
 {
     string filePos="/home/xayc/CERN/data/position.dat";
-    string fileSpec="/home/xayc/CERN/data/spectre_30TeV_";
+    string enName = "he_sp";
+    string parctileName= enName.substr(0,2);
+    string fileSpec="/home/xayc/CERN/data/"+parctileName+'/'+enName+"/spectre_"+enName+'_';
     ProcessFile obj;
-    bool index = false; // считывание соседей или расчет
-    obj.MainProccess(filePos,fileSpec,index);
-    cout<<"success"<<endl;
+    bool index = false; // считывание соседей или расчет (false = расчет не нужен)
+
+    obj.MainProccess(filePos,fileSpec,index,100, enName); // файл позиции, файл спетктра,индекс соседи, кол-во файлов спектра
+    cout<<"-----------SUCCESS-----------"<<endl;
     return 0;
 }

@@ -201,70 +201,38 @@ void ProcessFile::FilterSpec()
     cout<<f<<endl;
 
 }
-void ProcessFile::WriteFile(string fileOutName)
-{
-    ofstream file(fileOutName);
+void ProcessFile::WriteFile(string enName)
+{    
+    ofstream fileEn(("/home/xayc/CERN/data/spectrums/specEN_"+enName+".dat").c_str(), ofstream::binary);
+    ofstream fileZRC(("/home/xayc/CERN/data/spectrums/specZRC_"+enName+".dat").c_str(), ofstream::binary);
 
-    for(auto &event : specArr)
-    {
-        file <<'#'<< event.first <<endl;
-        for(unsigned int i = 0; i < event.second.reversCurrent.size(); i++)
-        {
-            file<<setprecision(3)<< event.second.reversCurrent[i]<<"  "<<event.second.chargeN[i]<<"  "<<event.second.chargewN[i]<<endl;
-        }
-        file << endl;
 
-//        file<<"---->Cells"<<endl;
-//        for(auto &layer : event.second.cellLayersEdep)
-//        {
-//            file<< layer.first <<"\t"<< layer.second <<endl;
-//        }
-//        file<<"---->Plates"<<endl;
-//        for(auto &plate : event.second.platesEdep)
-//        {
-//            file<< plate.first<<"\t"<< plate.second<<endl;
-//        }
-//        file<<endl;
-    }
-    file.close();
-
-}
-void ProcessFile::RootProccess()
-{
-    TH1* h1 =new TH1D("value", "Z value p, 30 TeV", 40, 0, 4);
-    for(auto &z : specArr)
-    {
-        double k = z.second.chargeN[1];
-        h1->Fill(k);
-    }
-    TH1* h2 =new TH1D("value", "Z value without Neighbors, 100 GeV", 40, 0, 4);
-    for(auto &z : specArr)
-    {
-        double k = z.second.chargewN[1];
-        h2->Fill(k);
-    }
-    TCanvas c ( "test", "test" );
-    h1->SetLineColor(kRed);
-    h1->Draw();
-    h2->Draw("SAME");
-    c.SetGridx();
-    c.Print ( "/home/xayc/CERN/specZ_30tev_p.pdf" );
-
-    TH1* h3 = new TH1D("value", "Energy distribution 30 TeV p 1k events", 100,0,3e4);
     for(auto &z : specArr)
     {
         double en = 0;
+        for(int i = 0; i < 4; i++)
+        {
+            double zrc = z.second.chargeN[i];
+            fileZRC.write((char*)&zrc,sizeof (zrc));
+            zrc = z.second.chargewN[i];
+            fileZRC.write((char*)&zrc,sizeof (zrc));
+            zrc = z.second.reversCurrent[i];
+            fileZRC.write((char*)&zrc,sizeof (zrc));
+        }
+
         for(auto &e : z.second.cellLayersEdep)
         {
             en+=e.second;
         }
-        h3->Fill(en);
+        fileEn.write((char*)&en,sizeof (en));
+
+
     }
-    TCanvas c1 ("test", "test");
-    h3->Draw();
-    c1.SetGrid();
-    c1.Print("/home/xayc/CERN/specEN_30tev_p.pdf");
+    fileEn.close();
+    fileZRC.close();
+
 }
+
 void ProcessFile::RootGraph2D(vector<ThreeVector> vec)
 {
     TApplication tapp("Test", 0, nullptr);
@@ -280,16 +248,21 @@ void ProcessFile::RootGraph2D(vector<ThreeVector> vec)
     tapp.Run();
 
 }
-void ProcessFile::MainProccess(string filePos, string fileSpec, bool index)
+void ProcessFile::MainProccess(string filePos, string fileSpec, bool index, int numFiles, string enName)
 {
     ParsingFile::ReadBinPosFile(filePos,mapIdPads,posCells,posPlates);
     SortLayersPos();
-    int amountFiles = 4;
     int evtId = 0;
-    for(int i = 1; i < amountFiles; i+=2)
+    if(numFiles == 1)
     {
-        string name = fileSpec + to_string(i) + ".dat";
-        evtId = ParsingFile::ReadBinSpecFile(name,cellLayersNum,specArr, evtId);
+        evtId = ParsingFile::ReadBinSpecFile(fileSpec,cellLayersNum,specArr, evtId);
+    }
+    else
+    {
+        for(int i = 0; i < numFiles; i++)
+        {
+            evtId = ParsingFile::ReadBinSpecFile(fileSpec + to_string(i+1) + ".dat",cellLayersNum,specArr, evtId);
+        }
     }
     FilterSpec();
     if(index)
@@ -303,9 +276,8 @@ void ProcessFile::MainProccess(string filePos, string fileSpec, bool index)
     {
         count[p.second.size()]++;
     }
-    WriteNeigFile();
+    //WriteNeigFile();
     FindReverseCurr();
-    RootProccess();
-    WriteFile("/home/xayc/CERN/data/spec.dat");
+    WriteFile(enName);
 }
 

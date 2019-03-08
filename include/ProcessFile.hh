@@ -74,10 +74,9 @@ public:
     ProcessFile(){}
     ~ProcessFile(){}
     void SortLayersPos();
-    void MainProccess(string filePos, string fileSpec, bool);
+    void MainProccess(string filePos, string fileSpec, bool, int, string);
     void FilterSpec();
     void WriteFile(string);
-    void RootProccess();
     void RootGraph2D(vector<ThreeVector> vec);
     void FindNeighborPads();
     void FindReverseCurr();
