@@ -210,15 +210,13 @@ void ProcessFile::WriteFile(string enName)
     for(auto &z : specArr)
     {
         double en = 0;
-        for(int i = 0; i < 4; i++)
-        {
-            double zrc = z.second.chargeN[i];
-            fileZRC.write((char*)&zrc,sizeof (zrc));
-            zrc = z.second.chargewN[i];
-            fileZRC.write((char*)&zrc,sizeof (zrc));
-            zrc = z.second.reversCurrent[i];
-            fileZRC.write((char*)&zrc,sizeof (zrc));
-        }
+
+        double zrc = z.second.chargeN[1];
+        fileZRC.write((char*)&zrc,sizeof (zrc));
+        zrc = z.second.chargewN[1];
+        fileZRC.write((char*)&zrc,sizeof (zrc));
+        zrc = z.second.reversCurrent[1];
+        fileZRC.write((char*)&zrc,sizeof (zrc));
 
         for(auto &e : z.second.cellLayersEdep)
         {
