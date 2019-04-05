@@ -75,6 +75,7 @@ void ProcessFile::FindReverseCurr()
     {
         double mainEdep = 0.;
         double neighEdep = 0.;
+        double mainEdepwAngle =0;
         vector<double> revCurr;
         vector<double> chargeNeig;
         vector<double> chargeWNeig;
@@ -84,7 +85,8 @@ void ProcessFile::FindReverseCurr()
             if(mapNeighbors.at(centPad.first).size() > 4)
             {
                 vector<int> vec = mapNeighbors.at(centPad.first);
-                angle = ThreeVector::getAngleTrackPad(posPlates.at(vec[0]),posPlates.at(vec[2]),posPlates.at(vec[4]),evt.second.momentumVec);
+                angle = ThreeVector::getAngleTrackPad(posPlates.at(vec[0]),posPlates.at(vec[2]),
+                        posPlates.at(vec[4]),evt.second.momentumVec);
             }
             else
                 angle = 1;
@@ -98,10 +100,11 @@ void ProcessFile::FindReverseCurr()
                     continue;
             }
             mainEdep = evt.second.platesEdep.at(centPad.first) * abs(angle);
-            neighEdep = edep * abs(angle) / mapNeighbors.at(centPad.first).size();
+            mainEdepwAngle = mainEdep / abs(angle);
+            neighEdep = edep  / mapNeighbors.at(centPad.first).size() * abs(angle);
             revCurr.push_back(mainEdep - neighEdep);
             chargeNeig.push_back(sqrt(abs(mainEdep - neighEdep)/thresholdValueSilic));
-            chargeWNeig.push_back(sqrt(abs(mainEdep)/thresholdValueSilic));
+            chargeWNeig.push_back(sqrt(abs(mainEdepwAngle)/thresholdValueSilic));
         }
         evt.second.chargeN = chargeNeig;
         evt.second.chargewN = chargeWNeig;
@@ -111,7 +114,7 @@ void ProcessFile::FindReverseCurr()
 }
 void ProcessFile::FilterSpec()
 {
-    int nOverLayers=5;
+    int nOverLayers=7;
     vector<int> evtErase;
     for(auto &event : specArr)
     {
@@ -120,14 +123,14 @@ void ProcessFile::FilterSpec()
             evtErase.push_back(event.first);
         }
     }
-    cout<<"Before filter cell edep: "<<specArr.size()<<endl;
+    cout<<"Before filter: "<<specArr.size()<<endl;
     for (auto &evt : evtErase)
     {
         auto it=specArr.find(evt);
         specArr.erase(it);
     }
     evtErase.clear();
-    cout<<"After: "<<specArr.size()<<endl;
+    cout<<"After filter cell edep: "<<specArr.size()<<endl;
     for(auto &event : specArr)
     {
         int count=0;
@@ -144,13 +147,13 @@ void ProcessFile::FilterSpec()
         }
 
     }
-    cout<<"Before filter Mips: "<<specArr.size()<<endl;
+    //cout<<"Before filter Mips: "<<specArr.size()<<endl;
     for (auto &evt : evtErase)
     {
         auto it=specArr.find(evt);
         specArr.erase(it);
     }
-    cout<<"After: "<<specArr.size()<<endl;
+    cout<<"After filter Mips: "<<specArr.size()<<endl;
     int a[10]={0};
     for (auto &evt : specArr)
     {
@@ -192,14 +195,26 @@ void ProcessFile::FilterSpec()
         a[cPads.size()]++;
 
     }
-    int f=0;
-    for(int i=0;i < 10;i++)
+//    int f=0;
+//    for(int i=0;i < 10;i++)
+//    {
+//        cout<<i<<'\t'<<a[i]<<endl;
+//        f+=a[i];
+//    }
+//    cout<<f<<endl;
+    evtErase.clear();
+    for(auto &evt : specArr)
     {
-        cout<<i<<'\t'<<a[i]<<endl;
-        f+=a[i];
+        if(evt.second.centralPads.size() < 4)
+            evtErase.push_back(evt.first);
     }
-    cout<<f<<endl;
-
+    //cout<<"Before filter neighboor: "<<specArr.size()<<endl;
+    for (auto &evt : evtErase)
+    {
+        auto it=specArr.find(evt);
+        specArr.erase(it);
+    }
+    cout<<"After filter neighboor: "<<specArr.size()<<endl;
 }
 void ProcessFile::WriteFile(string enName)
 {    
@@ -209,8 +224,7 @@ void ProcessFile::WriteFile(string enName)
 
     for(auto &z : specArr)
     {
-        double en = 0;
-
+        float en = 0;
         double zrc = z.second.chargeN[1];
         fileZRC.write((char*)&zrc,sizeof (zrc));
         zrc = z.second.chargewN[1];
@@ -222,6 +236,10 @@ void ProcessFile::WriteFile(string enName)
         {
             en+=e.second;
         }
+        //size_t pos = enName.find("sp");
+        size_t pos = enName.find("sp");
+        if(pos != std::string::npos)
+            fileEn.write((char*)&z.second.primEnergy,sizeof (z.second.primEnergy));
         fileEn.write((char*)&en,sizeof (en));
 
 

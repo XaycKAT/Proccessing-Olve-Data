@@ -120,12 +120,13 @@ int ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, m
     //номер, момент, позиция, кол-во выделений
     int32_t evtID=firstEvt, edepCount, copyN;
     int32_t buffEvt;
+    float primEnergy;
     ThreeVector posVec, momVec, targetVec;
     vector<pair<int,ThreeVector>> centPads;
     float energyEdep;
     mapTypeEdep buffCellMap;
     mapTypeEdep buffPlateMap;
-    while(fileSpec.read((char*)&buffEvt, sizeof(buffEvt)))
+    while(fileSpec.read((char*)&primEnergy, sizeof(primEnergy)))
     {
         ReadBinVec(fileSpec,momVec);
         ReadBinVec(fileSpec,posVec);
@@ -162,6 +163,7 @@ int ParsingFile::ReadBinSpecFile(string fileName, mapTypeLayer &cellLayersArr, m
         specArr[evtID].momentumVec=momVec;
         specArr[evtID].posVec=posVec;
         specArr[evtID].centralPads=centPads;
+        specArr[evtID].primEnergy = primEnergy;
         buffCellMap.clear();
         buffPlateMap.clear();
         centPads.clear();

@@ -17,6 +17,7 @@ struct EdepData
 {
     mapTypeEdep cellLayersEdep;
     mapTypeEdep platesEdep;
+    float primEnergy;
     vector<double> chargeN;
     vector<double> chargewN;
     vector<double> reversCurrent;
@@ -25,8 +26,10 @@ struct EdepData
     vector<pair<int,ThreeVector>> centralPads;
     EdepData(){}
     EdepData(ThreeVector pv, ThreeVector mv,vector<pair<int,ThreeVector>> centPads, mapTypeEdep cellEdep,
-             mapTypeEdep plateEdep, vector<double> revCurr, vector<double> chN,vector<double> chwN)
+             mapTypeEdep plateEdep, vector<double> revCurr, vector<double> chN,vector<double> chwN, float primEn)
+
     {
+        primEnergy = primEn;
         reversCurrent=revCurr;
         posVec=pv;
         momentumVec=mv;
@@ -61,8 +64,8 @@ class ProcessFile
 private:
     mapTypeLayer cellLayersNum;
     mapTypeSpec specArr;
-    double thresholdValuePlas=5*2*2.5*1.032;
-    double thresholdValueSilic=2*0.05*2.33;
+    double thresholdValuePlas=5*4.25; //2*2.5*1.032;
+    double thresholdValueSilic=0.18;//2*0.05*2.33;
     mapTypeID mapIdPads;
     mapTypeNiegh mapNeighbors;
     vector<pair<int,ThreeVector>> posCells;
